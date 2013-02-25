@@ -2,8 +2,8 @@ import localization_2d
 import particle_filter as pf
 import collision_detection as cd
 
-import grid_map_overlay as gmo
-import potential_field_overlay as pfo
+from overlays import grid_map_overlay as gmo
+from overlays import potential_field_overlay as pfo
 
 import curve_following_robot as cfr
 
