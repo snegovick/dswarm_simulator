@@ -4,9 +4,10 @@ class message:
     def __init__(self, data, address):
         self.data = data
         self.address = address
+        self.from_address = 0
 
     def __repr__(self):
-        return "<message to "+str(self.address)+", data length: "+str(len(self.data))+">"
+        return "<message to: "+str(self.address)+", from: "+str(self.from_address)+", data length: "+str(len(self.data))+">"
 
 class transciever:
     def __init__(self, address):
@@ -21,6 +22,7 @@ class transciever:
         return (True if len(self.incoming_messages) != 0 else False)
 
     def transmit(self, message):
+        message.from_address = self.address
         self.radio.push_message(message)
 
     def receive(self):
@@ -44,7 +46,7 @@ class radio:
     def process(self):
         for m in self.message_queue:
             if m.address == 255:
-                __broadcast(m)
+                self.__broadcast(m)
                 continue
             if m.address in self.transcievers:
                 self.transcievers[m.address].push_message(m)

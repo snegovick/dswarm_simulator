@@ -32,6 +32,41 @@ class pf_robot(cfr.cf_robot):
         self.path_is_built = False
         self.map_is_clean = True
 
+    def rebuild_path(self):
+        self.path_is_built = True
+        self.map_is_clean = False
+        # x_cell = int((self.path[0][0])/self.grid_overlay.pixels_per_cell)
+        # y_cell = int((self.path[0][1])/self.grid_overlay.pixels_per_cell)
+
+        x_cell = int((self.x+w/2)/self.grid_overlay.pixels_per_cell)
+        y_cell = int((self.y+h/2)/self.grid_overlay.pixels_per_cell)
+
+        start = (x_cell, y_cell)
+
+        x_cell = int((self.path[0][0])/self.grid_overlay.pixels_per_cell)
+        y_cell = int((self.path[0][1])/self.grid_overlay.pixels_per_cell)
+
+        finish = (x_cell, y_cell)
+        print "start, finish:", start, finish
+
+        t_map = copy_map(self.grid_overlay.map)
+        path = find_path_wave_heuristic8(t_map, self.obstacle_field_map, start, finish) # smoothing disabled
+        unaltered_path = path[:]
+        # path = smooth_path(path)
+        path = smooth_path_with_field(path, self.obstacle_field_map, self.grid_overlay.pixels_per_cell)
+        print "path:", path
+        path.reverse()
+
+        self.robot_path = []
+        for p in path:
+            t_x = p[0]*self.grid_overlay.pixels_per_cell
+            t_y = p[1]*self.grid_overlay.pixels_per_cell
+            self.robot_path.append((t_x+self.grid_overlay.pixels_per_cell/ppmm/2.0, t_y+self.grid_overlay.pixels_per_cell/ppmm/2.0))
+
+        for p in unaltered_path:
+            self.grid_overlay.drawing_map[int(p[1])][int(p[0])] = 1
+
+
     def draw_path(self, cr):
         if len(self.path)>1:
             self.path=self.path[:1]
@@ -43,41 +78,8 @@ class pf_robot(cfr.cf_robot):
 
         # print "name:", self.name, "path is built:", self.path_is_built, self.draw_trajectory, len(self.path)
         if ((self.path_is_built == False) and self.draw_trajectory and len(self.path)==1):
-
             print self.name
-
-            self.path_is_built = True
-            self.map_is_clean = False
-            # x_cell = int((self.path[0][0])/self.grid_overlay.pixels_per_cell)
-            # y_cell = int((self.path[0][1])/self.grid_overlay.pixels_per_cell)
-
-            x_cell = int((self.x+w/2)/self.grid_overlay.pixels_per_cell)
-            y_cell = int((self.y+h/2)/self.grid_overlay.pixels_per_cell)
-
-            start = (x_cell, y_cell)
-
-            x_cell = int((self.path[0][0])/self.grid_overlay.pixels_per_cell)
-            y_cell = int((self.path[0][1])/self.grid_overlay.pixels_per_cell)
-
-            finish = (x_cell, y_cell)
-            print "start, finish:", start, finish
-
-            t_map = copy_map(self.grid_overlay.map)
-            path = find_path_wave_heuristic8(t_map, self.obstacle_field_map, start, finish) # smoothing disabled
-            unaltered_path = path[:]
-            # path = smooth_path(path)
-            path = smooth_path_with_field(path, self.obstacle_field_map, self.grid_overlay.pixels_per_cell)
-            print "path:", path
-            path.reverse()
-
-            self.robot_path = []
-            for p in path:
-                t_x = p[0]*self.grid_overlay.pixels_per_cell
-                t_y = p[1]*self.grid_overlay.pixels_per_cell
-                self.robot_path.append((t_x+self.grid_overlay.pixels_per_cell/ppmm/2.0, t_y+self.grid_overlay.pixels_per_cell/ppmm/2.0))
-
-            for p in unaltered_path:
-                self.grid_overlay.drawing_map[int(p[1])][int(p[0])] = 1
+            self.rebuild_path()
 
         self.draw_dist(cr)
         self.draw_curve(cr)

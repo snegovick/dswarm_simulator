@@ -1,4 +1,5 @@
 from . import radio
+import struct
 
 class camera(object):
     def __init__(self):
@@ -7,8 +8,8 @@ class camera(object):
     def get_object_position(self, object_name):
         rval = None
         if object_name in self.objects:
-            x = self.objects["object_name"].x
-            y = self.objects["object_name"].y
+            x = self.objects[object_name].x
+            y = self.objects[object_name].y
             rval = (x, y)
         return rval
 
@@ -24,9 +25,9 @@ class camera_service(camera):
         while self.transciever.is_message_available():
             m = self.transciever.receive()
             name = m.data
-            addr = m.addr
-            m.addr = 255
-            position = get_object_position(name)
+            address = m.from_address
+            m.address = 255
+            position = self.get_object_position(name)
             if position != None:
-                m.data = struct.pack("Bff", addr, position[0], position[1])
+                m.data = struct.pack("Bff", address, position[0], position[1])
                 self.transciever.transmit(m)

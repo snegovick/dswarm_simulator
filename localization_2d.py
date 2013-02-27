@@ -290,7 +290,7 @@ class Screen(gtk.DrawingArea):
         self.queue_draw()
         return True
 
-    def init(self):
+    def radio_init(self):
         layer = objects2d[1]
         for r in layer:
             self.radio.add_transciever(r.transciever)
@@ -365,6 +365,7 @@ def run(Widget):
     window.resize(width, height)
     window.connect("delete-event", gtk.main_quit)
     widget = Widget()
+    widget.radio_init()
     widget.connect("button_press_event", widget.button_press_event)
     widget.set_events(gtk.gdk.BUTTON_PRESS_MASK)
     # print dir(widget)
