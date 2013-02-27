@@ -113,7 +113,7 @@ def find_path_wave8(m_map, start_point, end_point):
     params = {"m_map": m_map, "start_point": start_point, "end_point": end_point}
     return find_path_wave_lambda(params, lambda p: p["step"]*p["t_c"])
 
-def find_path_wave_heuristic8(m_map, field_map, start_point, end_point, field_value_coeff=6.0, distance_coeff=0.01, step_coeff=1.0):
+def find_path_wave_heuristic8(m_map, field_map, start_point, end_point, field_value_coeff=10.0, distance_coeff=0, step_coeff=2.0):
     params = {"m_map": m_map, "start_point": start_point, "end_point": end_point, "field_map": field_map, "field_value_coeff": field_value_coeff, "distance_coeff": distance_coeff, "step_coeff": step_coeff}
 
     def heuristic(p):
@@ -123,7 +123,7 @@ def find_path_wave_heuristic8(m_map, field_map, start_point, end_point, field_va
         return (p["step"]*p["t_c"]*p["params"]["step_coeff"]+
         p["params"]["field_value_coeff"]*p["params"]["field_map"][y][x]+
         p["params"]["distance_coeff"]*math.sqrt((ep[0]-x)**2+(ep[1]-y)**2))
-    return find_path_wave_lambda(params, heuristic)
+    return find_path_wave_lambda(params, heuristic, variant = 4)
 
 
 def throw_away_points(y):

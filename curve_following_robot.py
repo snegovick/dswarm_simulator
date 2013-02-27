@@ -21,13 +21,14 @@ class cf_robot(localization_2d.robot):
         self.path = []
         self.current_pt = None
         self.robot_path = []
-
+        self.omega_min = 0.8
         self.prev_error = None
 
     def draw_dist(self, cr):
         if self.current_pt != None:
             cr.move_to(self.x+w/2, self.y+h/2)
             cr.line_to(self.current_pt[0], self.current_pt[1])
+            cr.arc(self.current_pt[0], self.current_pt[1], 5/ppmm, 0.0, 2*math.pi)
             cr.stroke()
 
 
@@ -92,41 +93,60 @@ class cf_robot(localization_2d.robot):
             pt, dp, d = find_closest_point(path, (self.x+30*math.cos(self.theta)+w/2, self.y+30*math.sin(self.theta)+h/2))
             pt = (pt[0], pt[1])
             self.current_pt = pt #self.robot_path[idx]
-            print "pt:", pt, "dp:", dp
+            # print "pt:", pt, "dp:", dp
             
             theta = self.theta if self.theta>0 else 2*math.pi+self.theta
             alpha = math.atan2(dp[1], dp[0])
             alpha = alpha if alpha>0 else 2*math.pi+alpha
 
             gamma = theta-alpha
+            zeta = gamma
 
-            v1 = [math.cos(self.theta), math.sin(self.theta)]
-            v2 = [self.x+w/2-pt[0], self.y+h/2-pt[1]]
-            v2len = math.sqrt(v2[0]**2+v2[1]**2)
-            v2[0] = v2[0]/v2len
-            v2[1] = v2[1]/v2len
+            # if zeta>2*math.pi:
+            #     while zeta>2*math.pi:
+            #         zeta-=2*math.pi
+            # elif zeta<-2*math.pi:
+            #     while zeta<-2*math.pi:
+            #         zeta+=2*math.pi
 
-            print "v1:", v1, "v2:", v2
+            if zeta>math.pi:
+                zeta = 2*math.pi-zeta
+            elif zeta<=-math.pi:
+                zeta = 2*math.pi+zeta
 
-            d_sign = v1[0]*v2[1]-v1[1]*v2[0]
-            print "d_sign:", d_sign
-            d_sign = 1 if d_sign>0 else -1
+#            if abs(zeta)-math.pi<0.1:
+                
 
-            e = d
-
-            if self.prev_error==None:
-                self.prev_error = e
-                de = 0
+            if abs(zeta)>math.pi/3.:
+                sign = gamma/abs(gamma)
+                self.wheels_omega = (-sign*self.omega_min/2.0, sign*self.omega_min/2.0)
             else:
-                de = e - self.prev_error
-                self.prev_error = e
+                v1 = [math.cos(self.theta), math.sin(self.theta)]
+                v2 = [self.x+w/2-pt[0], self.y+h/2-pt[1]]
+                v2len = math.sqrt(v2[0]**2+v2[1]**2)
+                v2[0] = v2[0]/v2len
+                v2[1] = v2[1]/v2len
 
-            delta = 0.02*d*d_sign# - 0.5*de
-            delta = 3*delta
-            print "gamma:", gamma, "delta:", delta, "de:", de
+                # print "v1:", v1, "v2:", v2
 
-            omega_min = 0.8
-            self.wheels_omega = (omega_min-delta, omega_min+delta)
+                d_sign = v1[0]*v2[1]-v1[1]*v2[0]
+                # print "d_sign:", d_sign
+                d_sign = 1 if d_sign>0 else -1
+
+                e = d
+
+                if self.prev_error==None:
+                    self.prev_error = e
+                    de = 0
+                else:
+                    de = e - self.prev_error
+                    self.prev_error = e
+
+                delta = 0.02*d*d_sign# - 0.5*de
+                delta = 3*delta
+                self.wheels_omega = (self.omega_min-delta, self.omega_min+delta)
+                # print "delta:", delta, "de:", de
+            # print "gamma:", gamma, "zeta:", zeta
 
         else:
             self.current_pt = None

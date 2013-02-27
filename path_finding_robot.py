@@ -41,7 +41,11 @@ class pf_robot(cfr.cf_robot):
             self.path_is_built = False
             self.robot_path = []
 
+        # print "name:", self.name, "path is built:", self.path_is_built, self.draw_trajectory, len(self.path)
         if ((self.path_is_built == False) and self.draw_trajectory and len(self.path)==1):
+
+            print self.name
+
             self.path_is_built = True
             self.map_is_clean = False
             # x_cell = int((self.path[0][0])/self.grid_overlay.pixels_per_cell)
@@ -96,7 +100,13 @@ class pf_robot(cfr.cf_robot):
     def click_handler(self, event):
         print "Hay, im selected ! My name is:", self.name
         if event.button == 3:
+            print "adding point to path"
+            self.path = []
             self.path.append([event.x, event.y])
+            self.path_is_built = False
+            self.map_is_clean = True
+            self.grid_overlay.reset_drawing_map()
+            print self.path
             
 
 if __name__=="__main__":
@@ -122,7 +132,7 @@ if __name__=="__main__":
     pfield_overlay = pfo.PotentialFieldOverlay(50, 5, w, h, grid_overlay.drawing_map, True, 0.75)
 
 
-    names = ["first"]#, "second"]
+    names = ["first", "second"]
     colors = [(0,0,255), (255, 0, 0)]
 
     #add robots
@@ -142,11 +152,9 @@ if __name__=="__main__":
             r.polygon = localization_2d.objects2d[0]
             r.obstacle_field_map = pfield_overlay.drawing_map
             r.grid_overlay = grid_overlay
-            r.draw_trajectory = False
+            r.draw_trajectory = True
             localization_2d.objects2d[1].append(r)
             nctr += 1
-
-    localization_2d.objects2d[1][0].draw_trajectory = True
 
     screen = localization_2d.Screen
     screen.overlay_list = [pfield_overlay, grid_overlay]
