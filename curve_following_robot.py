@@ -2,7 +2,7 @@ import localization_2d
 import particle_filter as pf
 import collision_detection as cd
 from path_finding.catmull_rom import interpolate_4pt
-from path_finding.path_utils import find_closest_point, cr_spline_closest_point, point_to_point_dist
+from path_finding.path_utils import find_closest_point, cr_spline_closest_point, point_to_point_dist, find_dfs_point
 
 import random
 import math
@@ -24,11 +24,25 @@ class cf_robot(localization_2d.robot):
         self.omega_min = 0.8
         self.prev_error = None
 
+        self.turnaround_maneuver = False
+        self.turnaround_alpha = 0
+
+        self.target_pt = None
+        self.target_d = 0
+        self.target_dp = 0
+        self.target_dfs = 0
+        
+    def reset_target_point(self):
+        self.target_pt = None
+        self.target_d = 0
+        self.target_dp = 0
+        self.target_dfs = 0
+
     def draw_dist(self, cr):
-        if self.current_pt != None:
+        if self.target_pt != None:
             cr.move_to(self.x+w/2, self.y+h/2)
-            cr.line_to(self.current_pt[0], self.current_pt[1])
-            cr.arc(self.current_pt[0], self.current_pt[1], 5/ppmm, 0.0, 2*math.pi)
+            cr.line_to(self.target_pt[0], self.target_pt[1])
+            cr.arc(self.target_pt[0], self.target_pt[1], 5/ppmm, 0.0, 2*math.pi)
             cr.stroke()
 
 
@@ -90,14 +104,39 @@ class cf_robot(localization_2d.robot):
         if self.robot_path!=[] and len(self.robot_path)>4:
             path = [(self.x+0.1+w/2, self.y+0.1+h/2)]
             path+=self.robot_path
-            pt, dp, d = find_closest_point(path, (self.x+30*math.cos(self.theta)+w/2, self.y+30*math.sin(self.theta)+h/2))
+            pt, dp, d, dfs = find_closest_point(path, (self.x+30*math.cos(self.theta)+w/2, self.y+30*math.sin(self.theta)+h/2))
+            if dfs == 0:
+                dfs = 10
+                pt, dp = find_dfs_point(path, 10)
+                d = math.sqrt((pt[0]-self.x)**2+(pt[1]-self.y)**2)
             pt = (pt[0], pt[1])
+            if self.target_pt == None:
+                self.target_pt = pt
+                self.target_dp = dp
+                self.target_d = d
+                self.target_dfs = dfs
+
+            if dfs < self.target_dfs:
+                pt = self.target_pt
+                dp = self.target_dp
+                d = self.target_d
+                dfs = self.target_dfs
+            else:
+                self.target_pt = pt
+                self.target_dp = dp
+                self.target_d = d
+                self.target_dfs = dfs
+            
             self.current_pt = pt #self.robot_path[idx]
-            # print "pt:", pt, "dp:", dp
+            # print "pt:", pt, "dp:", dp, "dist_from_start:",dfs, "target dfs:", self.target_dfs
             
             theta = self.theta if self.theta>0 else 2*math.pi+self.theta
             alpha = math.atan2(dp[1], dp[0])
             alpha = alpha if alpha>0 else 2*math.pi+alpha
+
+            beta = math.atan2(pt[1]-self.y+h/2, pt[0]-self.x+w/2)
+            beta = beta if beta>0 else 2*math.pi+beta
+            # print "theta:", theta, "beta:", beta
 
             gamma = theta-alpha
             zeta = gamma
@@ -113,6 +152,7 @@ class cf_robot(localization_2d.robot):
                 zeta = 2*math.pi-zeta
             elif zeta<=-math.pi:
                 zeta = 2*math.pi+zeta
+                
 
 #            if abs(zeta)-math.pi<0.1:
                 

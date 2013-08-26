@@ -12,12 +12,17 @@ import math
 import copy
 
 from forkmap import map
-from path_finding.path_finding import find_path_wave_heuristic8, copy_map
+from path_finding.path_finding import find_path_wave_heuristic8
+from path_finding.map_utils import copy_map, translate_coords_to_cells
 from path_finding.smoothing_algorithms import smooth_path_with_field, smooth_path
 
 ppmm = localization_2d.pixel_per_mm
 w = localization_2d.polygon_width
 h = localization_2d.polygon_height
+
+x_cells = 50
+y_cells = 5
+
 
 class pf_robot(cfr.cf_robot):
     def __init__(self, x, y, r, name, color, theta, sense_noise, radio_address):
@@ -32,54 +37,53 @@ class pf_robot(cfr.cf_robot):
         self.path_is_built = False
         self.map_is_clean = True
 
-    def rebuild_path(self):
+        self.unaltered_path = []
+
+    def rebuild_path(self, t_map, start=None):
+        self.reset_target_point()
         self.path_is_built = True
         self.map_is_clean = False
         # x_cell = int((self.path[0][0])/self.grid_overlay.pixels_per_cell)
         # y_cell = int((self.path[0][1])/self.grid_overlay.pixels_per_cell)
 
-        x_cell = int((self.x+w/2)/self.grid_overlay.pixels_per_cell)
-        y_cell = int((self.y+h/2)/self.grid_overlay.pixels_per_cell)
+        #x_cell, y_cell = translate_coords_to_cells(self.x+w/2., self.y+h/2., w, h, x_cells, y_cells)
 
-        start = (x_cell, y_cell)
+        if start == None:
+            x_cell = int((self.x+w/2)/self.grid_overlay.pixels_per_cell)
+            y_cell = int((self.y+h/2)/self.grid_overlay.pixels_per_cell)
+            
+            self.start = (x_cell, y_cell)
 
         x_cell = int((self.path[0][0])/self.grid_overlay.pixels_per_cell)
         y_cell = int((self.path[0][1])/self.grid_overlay.pixels_per_cell)
 
-        finish = (x_cell, y_cell)
-        print "start, finish:", start, finish
+        self.finish = (x_cell, y_cell)
+        if math.sqrt((self.start[0]-self.finish[0])**2+(self.start[1]-self.finish[1])**2)<1:
+            self.path = []
+        # print "start, finish:", self.start, self.finish
 
-        t_map = copy_map(self.grid_overlay.map)
-        path = find_path_wave_heuristic8(t_map, self.obstacle_field_map, start, finish) # smoothing disabled
-        unaltered_path = path[:]
+        path = find_path_wave_heuristic8(t_map, self.obstacle_field_map, self.start, self.finish) # smoothing disabled
+        if path:
+            self.unaltered_path = path[:]
         # path = smooth_path(path)
-        path = smooth_path_with_field(path, self.obstacle_field_map, self.grid_overlay.pixels_per_cell)
-        print "path:", path
-        path.reverse()
+            path = smooth_path_with_field(path, self.obstacle_field_map, self.grid_overlay.pixels_per_cell)
+        # print "path:", path
+            path.reverse()
 
-        self.robot_path = []
-        for p in path:
-            t_x = p[0]*self.grid_overlay.pixels_per_cell
-            t_y = p[1]*self.grid_overlay.pixels_per_cell
-            self.robot_path.append((t_x+self.grid_overlay.pixels_per_cell/ppmm/2.0, t_y+self.grid_overlay.pixels_per_cell/ppmm/2.0))
+            self.robot_path = []
+            for p in path:
+                t_x = p[0]*self.grid_overlay.pixels_per_cell
+                t_y = p[1]*self.grid_overlay.pixels_per_cell
+                self.robot_path.append((t_x+self.grid_overlay.pixels_per_cell/ppmm/2.0, t_y+self.grid_overlay.pixels_per_cell/ppmm/2.0))
 
-        for p in unaltered_path:
-            self.grid_overlay.drawing_map[int(p[1])][int(p[0])] = 1
-
+        if self.selected:
+            for p in self.unaltered_path:
+                self.grid_overlay.drawing_map[int(p[1])][int(p[0])] = 1
 
     def draw_path(self, cr):
-        if len(self.path)>1:
-            self.path=self.path[:1]
-        elif (len(self.path)<1 and (not self.map_is_clean)):
-            self.grid_overlay.reset_drawing_map()
-            self.map_is_clean = True
-            self.path_is_built = False
-            self.robot_path = []
 
         # print "name:", self.name, "path is built:", self.path_is_built, self.draw_trajectory, len(self.path)
-        if ((self.path_is_built == False) and self.draw_trajectory and len(self.path)==1):
-            print self.name
-            self.rebuild_path()
+
 
         self.draw_dist(cr)
         self.draw_curve(cr)
@@ -97,6 +101,17 @@ class pf_robot(cfr.cf_robot):
         super(pf_robot,self).draw(cr)
 
     def synchronize(self):
+        if len(self.path)>1:
+            self.path=self.path[:1]
+        elif (len(self.path)<1 and (not self.map_is_clean)):
+            self.grid_overlay.reset_drawing_map()
+            self.map_is_clean = True
+            self.path_is_built = False
+            self.robot_path = []
+
+        if ((self.path_is_built == False) and len(self.path)==1):
+            # print self.name
+            self.rebuild_path(copy_map(self.grid_overlay.map))
         super(pf_robot, self).synchronize()
 
     def click_handler(self, event):
@@ -128,10 +143,11 @@ if __name__=="__main__":
 
 
     # add grid overlay and create grid map of obstacles
-    grid_overlay = gmo.GridMapOverlay(50, 5, w, h, True)
+    grid_overlay = gmo.GridMapOverlay(x_cells, y_cells, w, h, True)
+    y_cells = grid_overlay.y_cells
     grid_overlay.build_static_map(localization_2d.objects2d[0])
 
-    pfield_overlay = pfo.PotentialFieldOverlay(50, 5, w, h, grid_overlay.drawing_map, True, 0.75)
+    pfield_overlay = pfo.PotentialFieldOverlay(x_cells, y_cells, w, h, grid_overlay.drawing_map, True)
 
 
     names = ["first", "second"]

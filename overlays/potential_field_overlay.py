@@ -5,9 +5,13 @@ from path_finding.map_utils import print_map, copy_map
 from path_finding.potential_field import build_potential_field_map
 
 class PotentialFieldOverlay(l2d.Overlay):
-    def __init__(self, x_cells, y_cells, w, h, obstacle_map, save_aspect_ratio=False, regression_coeff = 0.6, start_value = 1.0, threshold = 0.2):
+    def __init__(self, x_cells, y_cells, w, h, obstacle_map, save_aspect_ratio=False, regression_coeff = 0.8, start_value = 1.0, threshold = 0.2):
         self.w = w
         self.h = h
+
+        self.regression_coeff = regression_coeff
+        self.start_value = start_value
+        self.threshold = threshold
 
         self.x_cells = x_cells
         self.pixels_per_cell = w/self.x_cells
@@ -23,6 +27,10 @@ class PotentialFieldOverlay(l2d.Overlay):
 
     def reset_drawing_map(self):
         self.drawing_map = copy_map(self.map)
+
+    def set_drawing_map(self, ext_map, r, s, t):
+        self.drawing_map = build_potential_field_map(ext_map, r, s, t)
+        return self.drawing_map
 
     def draw(self, cr, w, h):
         x_w = self.w/self.x_cells

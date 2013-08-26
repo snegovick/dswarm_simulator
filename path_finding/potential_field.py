@@ -13,8 +13,8 @@ def build_potential_field_map(m_map, regression_coeff = 0.6, start_value = 1.0, 
 
     for y, r in enumerate(m_map):
         for x, e in enumerate(r):
-            if e == -1:
-                m_t_map[y][x] = start_value
+            if e < 0:
+                m_t_map[y][x] = start_value*abs(e)
                 front.append((x, y))
 
     visited = front[:]

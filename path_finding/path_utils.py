@@ -14,12 +14,14 @@ def find_closest_point(path, pt):
     polynome, dp, coeffs = catmull_rom.interpolate_4pt(points, 0, 0)
     px = polynome(0, 0)
     py = polynome(0, 1)
+    dist_from_start = 0
 
     mdist = math.sqrt((px-pt[0])**2+(py-pt[1])**2)
     mt = 0
     mdp = (dp(0, 0), dp(0, 1))
     mpt = (px, py)
-
+    mdist_from_start = 0
+    ppx, ppy = px, py
     for i, p in enumerate(path):
         points = []
         if i == 0:
@@ -51,18 +53,91 @@ def find_closest_point(path, pt):
             px = polynome(0, 0)
             py = polynome(0, 1)
 
+            dist_from_start+=math.sqrt((px-ppx)**2+(py-ppy)**2)
+            
+            ppx, ppy = px, py
+
             for tt in range(steps):
                 t = tt/float(steps)
                 px = polynome(t, 0)
                 py = polynome(t, 1)
+
+                dist_from_start+=math.sqrt((px-ppx)**2+(py-ppy)**2)
+                ppx, ppy = px, py
+
                 dist = math.sqrt((px-pt[0])**2+(py-pt[1])**2)
                 if dist<mdist:
+                    mdist_from_start = dist_from_start
                     mdist = dist
                     mt = t
                     mdp = (dp(t, 0), dp(t, 1))
                     mpt = (px, py)
 
-    return (mpt, mdp, mdist)
+    return (mpt, mdp, mdist, mdist_from_start)
+
+def find_dfs_point(path, dfs):
+    points = []
+    points.append(path[0])
+    points.append(path[0])
+    points.append(path[1])
+    points.append(path[2])
+
+    polynome, dp, coeffs = catmull_rom.interpolate_4pt(points, 0, 0)
+    px = polynome(0, 0)
+    py = polynome(0, 1)
+    dist_from_start = 0
+
+    mt = 0
+    mdp = (dp(0, 0), dp(0, 1))
+    mpt = (px, py)
+    mdist_from_start = 0
+    ppx, ppy = px, py
+    for i, p in enumerate(path):
+        points = []
+        if i == 0:
+            points.append(path[i])
+            points.append(path[i])
+            points.append(path[i+1])
+            points.append(path[i+2])
+        elif i == len(path)-1:
+            points.append(path[i-2])
+            points.append(path[i-1])
+            points.append(path[i])
+            points.append(path[i])
+
+        elif i==len(path)-2:
+            points.append(path[i-1])
+            points.append(path[i])
+            points.append(path[i+1])
+            points.append(path[i+1])
+
+        else:
+            points.append(path[i-1])
+            points.append(path[i])
+            points.append(path[i+1])
+            points.append(path[i+2])
+
+            polynome, dp, coeffs = catmull_rom.interpolate_4pt(points, 0, 0)
+            steps = 5
+            
+            px = polynome(0, 0)
+            py = polynome(0, 1)
+
+            dist_from_start+=math.sqrt((px-ppx)**2+(py-ppy)**2)
+            
+            ppx, ppy = px, py
+
+            for tt in range(steps):
+                t = tt/float(steps)
+                px = polynome(t, 0)
+                py = polynome(t, 1)
+
+                dist_from_start+=math.sqrt((px-ppx)**2+(py-ppy)**2)
+                if dist_from_start>=dfs:
+                    return (px, py), (dp(t, 0), dp(t, 1))
+                ppx, ppy = px, py
+
+    return (mpt, mdp, mdist, mdist_from_start)
 
 def cr_spline_closest_point(points, pt):
     polynome, dp, coeffs = catmull_rom.interpolate_4pt(points, 0, 0)

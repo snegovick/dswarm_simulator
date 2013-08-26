@@ -87,7 +87,7 @@ def smooth_path(path):
             # print "t_x:", t_x, "t_y:", t_y, "t2_x:", t2_x, "t2_y:", t2_y, "new y:", n_y[-1], "old y:", t
 
             change += abs(t[0] - n_y[-1][0])+abs(t[1] - n_y[-1][1])
-        print "change:", change
+        # print "change:", change
         n_y.append(y[-1])
         y = n_y
         # break
@@ -150,20 +150,20 @@ def smooth_path_with_field(path, field_map, units_per_cell):
             t_x = t_x + delta_x
             t_y = t_y + delta_y
 
-            print "i:", i, type(y), type(m)
+            # print "i:", i, type(y), type(m)
             pt_x = int(y[i][0])
             pt_y = int(y[i][1])
-            print y[i][0], y[i][1], "->", pt_x, pt_y, "upc:", upc
+            # print y[i][0], y[i][1], "->", pt_x, pt_y, "upc:", upc
             dx, dy = calc_field_grad(m, (pt_x, pt_y))
 
-            print "dx, dy:", (dx, dy)
+            # print "dx, dy:", (dx, dy)
 
             sy = (1 if dy>0 else -1)
             sx = (1 if dx>0 else -1)
-            print "m at", pt_x, pt_y,":",m[pt_y][pt_x]
+            # print "m at", pt_x, pt_y,":",m[pt_y][pt_x]
             dx = gamma*sx*m[pt_y][pt_x]
             dy = gamma*sy*m[pt_y][pt_x]
-            print "dx, dy:", (dx, dy)
+            # print "dx, dy:", (dx, dy)
 
             t_x = t_x - dx
             t_y = t_y - dy
@@ -174,7 +174,7 @@ def smooth_path_with_field(path, field_map, units_per_cell):
             # print "t_x:", t_x, "t_y:", t_y, "t2_x:", t2_x, "t2_y:", t2_y, "new y:", n_y[-1], "old y:", t
 
             change += abs(t[0] - n_y[-1][0])+abs(t[1] - n_y[-1][1])
-        print "change:", change
+        # print "change:", change
         n_y.append(y[-1])
         y = n_y
         # break

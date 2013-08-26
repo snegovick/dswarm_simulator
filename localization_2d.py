@@ -3,6 +3,12 @@ import random
 import math
 import collision_detection as cd
 from extra import ceiling_camera, radio
+import sys
+
+write_pngs = False
+if len(sys.argv)>=2:
+    if sys.argv[1] == "w":
+        write_pngs = True
 
 bpp = 4
 
@@ -43,6 +49,7 @@ class polygon (obj2d, cd.aabb):
         self.width = width
         self.height = height
         self.lw = 10
+        self.selected = False
 
         self.top = -self.height/2. + self.lw
         self.bottom = self.height/2. - self.lw
@@ -79,6 +86,7 @@ class square_obstacle (obj2d):
         self.x = x
         self.y = y
         self.lw = 10
+        self.selected = False
 
     def check_if_point_belongs(self, x, y):
         pass
@@ -106,6 +114,7 @@ class circular_obstacle (obj2d):
         self.y = y
         self.r = r
         self.lw = 10
+        self.selected = False
 
     def check_if_point_belongs(self, x, y):
         if (math.sqrt((x-self.x)**2+(y-self.y)**2)<self.r):
@@ -130,6 +139,7 @@ class proto_robot(obj2d, cd.circle):
     def __init__(self, x, y, theta):
         self.x = x
         self.y = y
+        self.selected = False
 
         self.theta = theta
         self.ranges = [0.0 for i in range(8)]
@@ -302,7 +312,10 @@ class Screen(gtk.DrawingArea):
             layer1 = objects2d[1]
             for obj in layer0+layer1:
                 if obj.check_if_point_belongs(event.x - width/2., event.y-height/2.):
+                    if self.active_object != None:
+                        self.active_object.selected = False
                     self.active_object = obj
+                    self.active_object.selected = True
                     obj.click_handler(event)
                     return
         elif event.button == 3:
@@ -353,7 +366,8 @@ class Screen(gtk.DrawingArea):
 
         self.expose_overlays(cr, width, height)
 
-        cr_surf.write_to_png("/tmp/"+str(self.step).zfill(6)+".png")
+        if write_pngs:
+            cr_surf.write_to_png("/tmp/"+str(self.step).zfill(6)+".png")
         self.step += 1
         cr_gdk.set_source_surface(cr_surf)
         cr_gdk.paint()
