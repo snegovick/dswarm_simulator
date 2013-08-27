@@ -45,8 +45,6 @@ class Screen(gtk.DrawingArea):
             if w.clickable and (not w.hidden):
                 w.motion_notify(Event(event.x-w.area.x, event.y-w.area.y, None))
 
-
-
     # Handle the expose-event by drawing
     def do_expose_event(self, event):
         # Create the cairo context
@@ -74,7 +72,6 @@ class Screen(gtk.DrawingArea):
 
     def add_widget(self, widget):
         self.widgets.append(widget)
-
         
 # GTK mumbo-jumbo to show the widget in a window and quit when it's closed
 def run(Widget):
@@ -112,4 +109,3 @@ def run(Widget):
 
 if __name__ == "__main__":
     run(Screen)
-
