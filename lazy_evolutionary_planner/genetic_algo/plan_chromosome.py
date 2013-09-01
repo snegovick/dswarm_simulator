@@ -1,6 +1,6 @@
 import random
 # Chromosome compact form: <task index> <executor>
-class Chromosome:
+class Chromosome(object):
     def __init__(self, compact="", split_form=[], mutation_probability=0.3):
         self.mutation_probability = mutation_probability
         if compact!="":
@@ -49,18 +49,23 @@ class Chromosome:
         start = random.randint(0, len(self)-2)
         end = random.randint(0, (len(self)-1-start)/2)+start
 
-        new_split_form = []
-        sorted_split_form = self.split_form[:]
-        sorted_split_form.sort()
-        print ""
-        for i, v in enumerate(sorted_split_form):
+        c1 = []
+        c2 = []
+        p1_sorted_split_form = self.split_form[:]
+        p1_sorted_split_form.sort()
+        p2_sorted_split_form = chromosome2.split_form[:]
+        p2_sorted_split_form.sort()
+        for i, (p1, p2) in enumerate(zip(p1_sorted_split_form, p2_sorted_split_form)):
             if (i<start):
-                new_split_form.append(v)
+                c1.append(p1)
+                c2.append(p2)
             elif i>=start and i<=end:
-                new_split_form.append(chromosome2.split_form[i])
+                c1.append(p2)
+                c2.append(p1)
             else:
-                new_split_form.append(v)                
-        return Chromosome(split_form=new_split_form)
+                c1.append(p1)
+                c2.append(p2)
+        return (Chromosome(split_form=c1), Chromosome(split_form=c2))
 
     def _split(self):
         self.split_form = []
@@ -74,6 +79,18 @@ class Chromosome:
         for k, v in self.split_form:
             self.compact_form += str(k)+" "+str(v)+" "
         self.compact_form = self.compact_form[:-1]
+
+    def evaluate(self):
+        executor_queues = {}
+        for t, e in self.split_form:
+            if e in executor_queues:
+                executor_queues[e]+=1
+            else:
+                executor_queues[e]=1
+#        keys = executor_queues.keys()
+#        values = executor_queues.values()
+        
+        return 1.0/max(executor_queues.values())
 
 if __name__=="__main__":
     c1 = Chromosome("1 a 2 b 3 c 4 d")
