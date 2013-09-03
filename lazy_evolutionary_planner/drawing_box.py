@@ -14,6 +14,12 @@ class DrawingBox(PlannerWidget):
 
         self.start_drag = [0,0]
         self.move = False
+
+        self.plan = None
+        self.task_lengths = None
+
+    def setPlan(self, plan):
+        self.plan = plan
     
     def draw(self, ctx, area):
         self.area = area

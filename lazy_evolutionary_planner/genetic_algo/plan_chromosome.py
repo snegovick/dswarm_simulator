@@ -1,7 +1,7 @@
 import random
 # Chromosome compact form: <task index> <executor>
 class Chromosome(object):
-    def __init__(self, compact="", split_form=[], mutation_probability=0.3):
+    def __init__(self, compact="", split_form=[], mutation_probability=0.3, task_costs=None):
         self.mutation_probability = mutation_probability
         if compact!="":
             self.compact_form = compact
@@ -12,6 +12,11 @@ class Chromosome(object):
         else:
             self.split_form = []
             self.compact_form = ""
+
+        self.task_costs = task_costs
+        if task_costs == None:
+            # lets assume uniform cost
+            self.task_costs = [1 for t in split_form]
 
     def __len__(self):
         return len(self.split_form)
