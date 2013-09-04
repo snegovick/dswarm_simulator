@@ -2,9 +2,13 @@
 import random
 import math
 import sys
+import string
 
 from planner_widgets import *
 from drawing_box import *
+
+sys.path.append("./genetic_algo")
+from population import Population
 
 width = 800
 height = 400
@@ -96,6 +100,22 @@ def run(Widget):
     widget.add_widget(vp)
     widget.add_widget(widget.db)
     widget.add_widget(widget.tl)
+
+    individuals = 10
+    executors = []
+    number_of_executors = 3
+
+    tasks = [i for i in range(10)]
+
+    for i in string.letters[:number_of_executors]:
+        executors.append(i)
+
+    widget.population = Population(individuals, executors, tasks)
+    widget.population.step()
+
+    plan = widget.population.evaluated_population[0][1]
+
+    widget.db.setPlan(plan)
     
     # print dir(widget)
     # widget.m_window = window

@@ -70,3 +70,22 @@ class DrawingBox(PlannerWidget):
             ctx.line_to(px, a.y+a.h)
         
         ctx.stroke()
+
+        dict_form = self.plan.dictFormExecutors()
+        colors = [(0.9, 0.1, 0.1), (0.1, 0.9, 0.1), (0.1, 0.1, 0.9), (0.9, 0.9, 0.1), (0.9, 0.1, 0.9), (0.1, 0.9, 0.9)]
+        current_color = 0
+        current_y = a.y
+        print dict_form
+
+        for k, v in dict_form.iteritems():
+            current_x = 0
+            for t in v:
+                c = colors[current_color]
+                current_color+=1
+                current_color%=len(colors)
+                ctx.set_source_rgb(c[0], c[1], c[2])
+                ctx.rectangle(current_x, current_y, 20, current_y+participator_h)
+                print current_x, current_y, 20, current_y+participator_h
+                current_x += 20
+                ctx.fill()
+            current_y += participator_h

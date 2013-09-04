@@ -27,6 +27,22 @@ class Chromosome(object):
     def _shortForm(self):
         return self.compact_form.replace(" ", "")
 
+    def dictFormTasks(self):
+        d = {}
+        for t in self.split_form:
+            if not t[0] in d:
+                d[t[0]] = []
+            d[t[0]].append(t[1])
+        return d
+
+    def dictFormExecutors(self):
+        d = {}
+        for t in self.split_form:
+            if not t[1] in d:
+                d[t[1]] = []
+            d[t[1]].append(t[0])
+        return d
+
     def mutate(self, amount, executors):
         for i in range(amount):
             if (random.random()<self.mutation_probability):
