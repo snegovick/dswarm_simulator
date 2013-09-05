@@ -88,8 +88,19 @@ def run(Widget):
     widget.connect("button_release_event", widget.button_release_event)
     widget.connect("motion_notify_event", widget.motion_notify)
 
+    individuals = 10
+    executors = []
+    number_of_executors = 10
+    n_tasks = 100
+
+    tasks = [i for i in range(n_tasks)]
+
+    for i in string.letters[:number_of_executors]:
+        executors.append(i)
+
+
     vp = VerticalPack()
-    widget.db = DrawingBox(20)
+    widget.db = DrawingBox(number_of_executors)
     vp.pack_end(widget.db)
     widget.tl = TimeLineWidget()
     vp.pack_end(widget.tl)
@@ -101,14 +112,6 @@ def run(Widget):
     widget.add_widget(widget.db)
     widget.add_widget(widget.tl)
 
-    individuals = 10
-    executors = []
-    number_of_executors = 3
-
-    tasks = [i for i in range(10)]
-
-    for i in string.letters[:number_of_executors]:
-        executors.append(i)
 
     widget.population = Population(individuals, executors, tasks)
     widget.population.step()

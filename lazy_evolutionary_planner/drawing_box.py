@@ -1,4 +1,5 @@
 from planner_widgets import *
+import random
 
 class DrawingBox(PlannerWidget):
     def __init__(self, n_participators):
@@ -20,6 +21,7 @@ class DrawingBox(PlannerWidget):
 
     def setPlan(self, plan):
         self.plan = plan
+        self.colors = [(random.random(), random.random(), random.random()) for t in self.plan.split_form]
     
     def draw(self, ctx, area):
         self.area = area
@@ -30,7 +32,7 @@ class DrawingBox(PlannerWidget):
         a = area
 
         ctx.set_source_rgb(1.0, 1.0, 1.0)
-        ctx.rectangle(a.x, a.y, a.x+a.w, a.y+a.h)
+        ctx.rectangle(a.x, a.y, a.w, a.h)
         ctx.fill()
 
         ctx.set_line_width(2)
@@ -56,14 +58,16 @@ class DrawingBox(PlannerWidget):
 
         ctx.stroke()
 
+
         # draw vertical lines
+        s = 10**self.scale
         px_per_cell = a.w/self.vertical_lines
+        ppu = px_per_cell/s
         current_x = a.x
         val = self.leftmost_val
-        s = 10**self.scale
+
         for i in range(self.vertical_lines):
-            next_val = int(val+(i+1)*s)/int(s)
-            next_val *= s
+            next_val = (int(val/s)+(i+1))*s
             remainder = next_val - val
             px = remainder*px_per_cell
             ctx.move_to(px, a.y)
@@ -72,20 +76,36 @@ class DrawingBox(PlannerWidget):
         ctx.stroke()
 
         dict_form = self.plan.dictFormExecutors()
-        colors = [(0.9, 0.1, 0.1), (0.1, 0.9, 0.1), (0.1, 0.1, 0.9), (0.9, 0.9, 0.1), (0.9, 0.1, 0.9), (0.1, 0.9, 0.9)]
+
         current_color = 0
         current_y = a.y
-        print dict_form
+        # print dict_form
+        border = 2
+        # print "ppu:", ppu
 
+        print self.leftmost_val*ppu
         for k, v in dict_form.iteritems():
             current_x = 0
             for t in v:
-                c = colors[current_color]
+                width = 1*ppu
+                c = self.colors[current_color]
                 current_color+=1
-                current_color%=len(colors)
+                current_color%=len(self.colors)
+
+                if current_x+width < self.leftmost_val*ppu:
+                    print "pass"
+                    current_x += width
+                    continue
+                
                 ctx.set_source_rgb(c[0], c[1], c[2])
-                ctx.rectangle(current_x, current_y, 20, current_y+participator_h)
-                print current_x, current_y, 20, current_y+participator_h
-                current_x += 20
+                startx = current_x - self.leftmost_val*ppu
+                actual_width = width
+                if startx<0:
+                    actual_width = width+(startx)
+                    print "diff:", width+startx
+                    startx = 0
+                ctx.rectangle(int(a.x+startx), int(a.y+current_y), int(actual_width), int(participator_h))
+                # print current_x+border, current_y+border, 20-border, current_y+participator_h-border
+                current_x += width
                 ctx.fill()
             current_y += participator_h
